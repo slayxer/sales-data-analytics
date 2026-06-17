@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Products – SalesIQ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+{% include 'sidebar.html' %}
+<div class="main">
+    <div class="topbar">
+        <h1>📦 Products</h1>
+        <form method="get" action="/products" style="display:flex;gap:10px;align-items:center;">
+            <label style="font-size:14px;color:#555;">Filter:</label>
+            <select name="product" onchange="this.form.submit()" class="filter-select">
+                <option value="All" {% if selected == 'All' %}selected{% endif %}>All Products</option>
+                {% for p in all_products %}
+                <option value="{{ p }}" {% if selected == p %}selected{% endif %}>{{ p }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="cards" style="grid-template-columns: repeat({{ summary|length }}, 1fr);">
+        {% set colors = ['card-blue','card-green','card-purple','card-orange','card-red'] %}
+        {% for row in summary %}
+        <div class="card {{ colors[loop.index0 % colors|length] }}">
+            <div class="card-icon">📦</div>
+            <div class="card-info">
+                <p>{{ row.product }}</p>
+                <h2>₹{{ "{:,}".format(row.total_revenue|int) }}</h2>
+                <small>{{ row.total_orders }} orders · {{ row.total_qty }} units</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Monthly Trend Chart -->
+    <div class="chart-box" style="margin-bottom:24px;">
+        <h3>Monthly Revenue Trend by Product</h3>
+        <canvas id="trendChart" height="80"></canvas>
+    </div>
+
+    <!-- Table -->
+    <div class="table-box">
+        <h3>📋 Product Summary</h3>
+        <table>
+            <thead><tr><th>Product</th><th>Total Revenue</th><th>Orders</th><th>Units Sold</th><th>Avg Order Value</th></tr></thead>
+            <tbody>
+            {% for row in summary %}
+            <tr>
+                <td><strong>{{ row.product }}</strong></td>
+                <td class="revenue-cell">₹{{ "{:,}".format(row.total_revenue|int) }}</td>
+                <td>{{ row.total_orders }}</td>
+                <td>{{ row.total_qty }}</td>
+                <td class="revenue-cell">₹{{ "{:,}".format((row.total_revenue / row.total_orders)|int) }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    const months = {{ months|tojson }};
+    const trendData = {{ trend_data|tojson }};
+    const palette = ['#4f46e5','#7c3aed','#db2777','#ea580c','#16a34a'];
+    const datasets = Object.entries(trendData).map(([name, data], i) => ({
+        label: name, data,
+        borderColor: palette[i % palette.length],
+        backgroundColor: palette[i % palette.length] + '22',
+        tension: 0.4, fill: true, pointRadius: 4
+    }));
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: { labels: months, datasets },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+</script>
+</body>
+</html>

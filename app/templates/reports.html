@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reports – SalesIQ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+{% include 'sidebar.html' %}
+<div class="main">
+    <div class="topbar">
+        <h1>📈 Reports</h1>
+        <span class="badge">Monthly Summary</span>
+    </div>
+
+    <!-- Highlight Cards -->
+    <div class="cards">
+        <div class="card card-blue">
+            <div class="card-icon">💰</div>
+            <div class="card-info"><p>Total Revenue</p><h2>₹{{ "{:,}".format(total_revenue) }}</h2></div>
+        </div>
+        <div class="card card-green">
+            <div class="card-icon">🛒</div>
+            <div class="card-info"><p>Total Orders</p><h2>{{ total_orders }}</h2></div>
+        </div>
+        <div class="card card-purple">
+            <div class="card-icon">📅</div>
+            <div class="card-info"><p>Best Month</p><h2>{{ best_month }}</h2></div>
+        </div>
+        <div class="card card-orange">
+            <div class="card-icon">🏆</div>
+            <div class="card-info"><p>Avg Order Value</p><h2>₹{{ "{:,}".format(avg_order_value) }}</h2></div>
+        </div>
+    </div>
+
+    <!-- Insights Row -->
+    <div class="tables-row" style="margin-bottom:24px;">
+        <div class="table-box" style="background:linear-gradient(135deg,#4f46e5,#6366f1);color:white;">
+            <h3 style="color:white;">🏆 Best Performing Product</h3>
+            <p style="font-size:32px;font-weight:700;margin-top:12px;">{{ best_product }}</p>
+            <p style="opacity:0.8;margin-top:6px;">Highest total revenue across all months</p>
+        </div>
+        <div class="table-box" style="background:linear-gradient(135deg,#16a34a,#22c55e);color:white;">
+            <h3 style="color:white;">🏙️ Best Performing City</h3>
+            <p style="font-size:32px;font-weight:700;margin-top:12px;">{{ best_city }}</p>
+            <p style="opacity:0.8;margin-top:6px;">Highest total revenue across all months</p>
+        </div>
+    </div>
+
+    <!-- Monthly Revenue Chart -->
+    <div class="chart-box" style="margin-bottom:24px;">
+        <h3>Monthly Revenue</h3>
+        <canvas id="revenueChart" height="80"></canvas>
+    </div>
+
+    <!-- Monthly Orders Chart -->
+    <div class="chart-box" style="margin-bottom:24px;">
+        <h3>Monthly Orders</h3>
+        <canvas id="ordersChart" height="80"></canvas>
+    </div>
+
+    <!-- Monthly Table -->
+    <div class="table-box">
+        <h3>📋 Month-by-Month Breakdown</h3>
+        <table>
+            <thead><tr><th>Month</th><th>Revenue</th><th>Orders</th><th>Avg Order Value</th></tr></thead>
+            <tbody>
+            {% for row in monthly %}
+            <tr>
+                <td><strong>{{ row.month }}</strong></td>
+                <td class="revenue-cell">₹{{ "{:,}".format(row.revenue|int) }}</td>
+                <td>{{ row.orders }}</td>
+                <td class="revenue-cell">₹{{ "{:,}".format((row.revenue / row.orders)|int) }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    const months   = {{ monthly|map(attribute='month')|list|tojson }};
+    const revenues = {{ monthly|map(attribute='revenue')|list|tojson }};
+    const orders   = {{ monthly|map(attribute='orders')|list|tojson }};
+
+    new Chart(document.getElementById('revenueChart'), {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Revenue (₹)', data: revenues,
+                borderColor: '#4f46e5', backgroundColor: '#4f46e522',
+                tension: 0.4, fill: true, pointRadius: 5
+            }]
+        },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    new Chart(document.getElementById('ordersChart'), {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Orders', data: orders,
+                backgroundColor: '#16a34a', borderRadius: 8
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+</script>
+</body>
+</html>

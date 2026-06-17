@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Entry – SalesIQ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% include 'sidebar.html' %}
+<div class="main">
+    <div class="topbar">
+        <h1>➕ Data Entry</h1>
+        <span class="badge">Add New Sale</span>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="entry-layout">
+        <!-- Form -->
+        <div class="table-box entry-form-box">
+            <h3>📋 New Sale Record</h3>
+            <form method="POST" action="/entry">
+                <div class="form-group">
+                    <label>Product</label>
+                    <input list="product-list" name="product" placeholder="e.g. Laptop" required class="form-input">
+                    <datalist id="product-list">
+                        {% for p in all_products %}
+                        <option value="{{ p }}">
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="number" name="quantity" min="1" placeholder="e.g. 3" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Price (₹)</label>
+                        <input type="number" name="price" min="0" step="0.01" placeholder="e.g. 15000" required class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input list="city-list" name="city" placeholder="e.g. Mumbai" required class="form-input">
+                    <datalist id="city-list">
+                        {% for c in all_cities %}
+                        <option value="{{ c }}">
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="date" value="{{ today }}" required class="form-input">
+                </div>
+                <button type="submit" class="btn-submit">➕ Add Sale</button>
+            </form>
+        </div>
+
+        <!-- Recent Entries -->
+        <div class="table-box">
+            <h3>🕒 Recent 10 Entries</h3>
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Product</th><th>Qty</th><th>Price</th><th>City</th><th>Date</th><th>Revenue</th></tr>
+                </thead>
+                <tbody>
+                {% for row in recent %}
+                <tr>
+                    <td>{{ row.order_id }}</td>
+                    <td>{{ row.product }}</td>
+                    <td>{{ row.quantity }}</td>
+                    <td>₹{{ "{:,}".format(row.price|int) }}</td>
+                    <td>{{ row.city }}</td>
+                    <td>{{ row.date.strftime('%d %b %Y') }}</td>
+                    <td class="revenue-cell">₹{{ "{:,}".format(row.revenue|int) }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

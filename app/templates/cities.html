@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cities – SalesIQ</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+{% include 'sidebar.html' %}
+<div class="main">
+    <div class="topbar">
+        <h1>🏙️ Cities</h1>
+        <form method="get" action="/cities" style="display:flex;gap:10px;align-items:center;">
+            <label style="font-size:14px;color:#555;">Filter:</label>
+            <select name="city" onchange="this.form.submit()" class="filter-select">
+                <option value="All" {% if selected == 'All' %}selected{% endif %}>All Cities</option>
+                {% for c in all_cities %}
+                <option value="{{ c }}" {% if selected == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="cards" style="grid-template-columns: repeat({{ summary|length }}, 1fr);">
+        {% set colors = ['card-blue','card-green','card-purple','card-orange','card-red'] %}
+        {% for row in summary %}
+        <div class="card {{ colors[loop.index0 % colors|length] }}">
+            <div class="card-icon">🏙️</div>
+            <div class="card-info">
+                <p>{{ row.city }}</p>
+                <h2>₹{{ "{:,}".format(row.total_revenue|int) }}</h2>
+                <small>{{ row.total_orders }} orders</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+        <div class="chart-box">
+            <h3>Revenue by City</h3>
+            <canvas id="cityBarChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h3>Product Mix by City</h3>
+            <canvas id="cityProductChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-box">
+        <h3>📋 City Summary</h3>
+        <table>
+            <thead><tr><th>City</th><th>Total Revenue</th><th>Orders</th><th>Avg Order Value</th></tr></thead>
+            <tbody>
+            {% for row in summary %}
+            <tr>
+                <td><strong>{{ row.city }}</strong></td>
+                <td class="revenue-cell">₹{{ "{:,}".format(row.total_revenue|int) }}</td>
+                <td>{{ row.total_orders }}</td>
+                <td class="revenue-cell">₹{{ "{:,}".format((row.total_revenue / row.total_orders)|int) }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    const cityData = {{ city_product|tojson }};
+    const palette = ['#4f46e5','#7c3aed','#db2777','#ea580c','#16a34a','#0891b2'];
+    const cities = Object.keys(cityData);
+    const cityRevenues = cities.map(c => Object.values(cityData[c]).reduce((a,b)=>a+b,0));
+
+    new Chart(document.getElementById('cityBarChart'), {
+        type: 'bar',
+        data: {
+            labels: cities,
+            datasets: [{ label: 'Revenue (₹)', data: cityRevenues,
+                backgroundColor: palette, borderRadius: 8 }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    // Stacked bar: product mix per city
+    const allProducts = [...new Set(Object.values(cityData).flatMap(c => Object.keys(c)))];
+    const stackedDatasets = allProducts.map((p, i) => ({
+        label: p,
+        data: cities.map(c => cityData[c][p] || 0),
+        backgroundColor: palette[i % palette.length],
+        borderRadius: 4
+    }));
+    new Chart(document.getElementById('cityProductChart'), {
+        type: 'bar',
+        data: { labels: cities, datasets: stackedDatasets },
+        options: {
+            responsive: true,
+            scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+</script>
+</body>
+</html>

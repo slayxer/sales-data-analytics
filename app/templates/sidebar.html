@@ -1,0 +1,10 @@
+<div class="sidebar">
+    <div class="logo">📊 SalesIQ</div>
+    <nav>
+        <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">🏠 Dashboard</a>
+        <a href="/products" class="nav-item {% if request.path == '/products' %}active{% endif %}">📦 Products</a>
+        <a href="/cities" class="nav-item {% if request.path == '/cities' %}active{% endif %}">🏙️ Cities</a>
+        <a href="/reports" class="nav-item {% if request.path == '/reports' %}active{% endif %}">📈 Reports</a>
+        <a href="/entry" class="nav-item {% if request.path == '/entry' %}active{% endif %}">➕ Data Entry</a>
+    </nav>
+</div>

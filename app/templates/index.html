@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sales Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+{% include 'sidebar.html' %}
+<div class="main">
+    <div class="topbar">
+        <h1>🏠 Dashboard</h1>
+        <span class="badge">Live Data</span>
+    </div>
+    <div class="cards">
+        <div class="card card-blue">
+            <div class="card-icon">💰</div>
+            <div class="card-info"><p>Total Revenue</p><h2>₹{{ "{:,}".format(revenue) }}</h2></div>
+        </div>
+        <div class="card card-green">
+            <div class="card-icon">🛒</div>
+            <div class="card-info"><p>Total Orders</p><h2>{{ orders }}</h2></div>
+        </div>
+        <div class="card card-purple">
+            <div class="card-icon">📦</div>
+            <div class="card-info"><p>Products</p><h2>{{ products|length }}</h2></div>
+        </div>
+        <div class="card card-orange">
+            <div class="card-icon">🏙️</div>
+            <div class="card-info"><p>Cities</p><h2>{{ cities|length }}</h2></div>
+        </div>
+    </div>
+    <div class="charts-row">
+        <div class="chart-box">
+            <h3>Revenue by Product</h3>
+            <canvas id="productChart"></canvas>
+        </div>
+        <div class="chart-box">
+            <h3>Revenue by City</h3>
+            <canvas id="cityChart"></canvas>
+        </div>
+    </div>
+    <div class="tables-row">
+        <div class="table-box">
+            <h3>📦 Top Products</h3>
+            <table><thead><tr><th>Product</th><th>Revenue</th></tr></thead><tbody>
+            {% for key, value in products.items() %}
+            <tr><td>{{ key }}</td><td class="revenue-cell">₹{{ "{:,}".format(value|int) }}</td></tr>
+            {% endfor %}
+            </tbody></table>
+        </div>
+        <div class="table-box">
+            <h3>🏙️ Sales by City</h3>
+            <table><thead><tr><th>City</th><th>Revenue</th></tr></thead><tbody>
+            {% for key, value in cities.items() %}
+            <tr><td>{{ key }}</td><td class="revenue-cell">₹{{ "{:,}".format(value|int) }}</td></tr>
+            {% endfor %}
+            </tbody></table>
+        </div>
+    </div>
+</div>
+<script>
+    new Chart(document.getElementById('productChart'), {
+        type: 'bar',
+        data: {
+            labels: {{ products.keys()|list|tojson }},
+            datasets: [{ label: 'Revenue (₹)', data: {{ products.values()|list|tojson }},
+                backgroundColor: ['#4f46e5','#7c3aed','#db2777','#ea580c','#16a34a'], borderRadius: 8 }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+    new Chart(document.getElementById('cityChart'), {
+        type: 'doughnut',
+        data: {
+            labels: {{ cities.keys()|list|tojson }},
+            datasets: [{ data: {{ cities.values()|list|tojson }},
+                backgroundColor: ['#4f46e5','#7c3aed','#db2777','#ea580c','#16a34a','#0891b2'], borderWidth: 2 }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+</script>
+</body>
+</html>
